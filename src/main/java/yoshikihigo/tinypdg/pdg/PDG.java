@@ -427,4 +427,54 @@ public class PDG implements Comparable<PDG> {
 		default:
 		}
 	}
+	/*
+	 * param@nodes is all the nodes in the pdg
+	 * param@linenumber is line of source code
+	 * return node corresponding to the param linenumber
+	 */
+	public PDGNode<?> getNodeofLine(SortedSet<PDGNode<?>> nodes, int linenumber){
+		assert null != nodes : "\"nodes\" is null.";
+		for (final PDGNode<?> node : nodes) {
+			if(node.core.startLine == linenumber)
+				return node;
+		}
+		return null;
+	}
+	/*
+	 * get backward data nodes
+	 * param@enternode is slicing criteria
+	 * param@nodes is to store slicing nodes
+	 */
+	public void getBackwardNodes(final PDGNode<?> enternode, final SortedSet<PDGNode<?>> nodes){
+		assert null != enternode : "\"node\" is null.";
+		assert null != nodes : "\"nodes\" is null.";
+		if (nodes.contains(enternode) || enternode instanceof PDGMethodEnterNode) {
+			return;
+		}
+		nodes.add(enternode);
+		for (final PDGEdge edge : enternode.getBackwardEdges()) {
+			if(edge.type == PDGEdge.TYPE.DATA || edge.type == PDGEdge.TYPE.CONTROL) //add data edge filter
+				this.getBackwardNodes(edge.fromNode, nodes);
+		}
+		
+	}
+	//get Forward data nodes
+	/*
+	 * get backward data nodes
+	 * param@enternode is slicing criteria
+	 * param@nodes is to store slicing nodes
+	 */
+	public void getForwardNodes(final PDGNode<?> enternode, final SortedSet<PDGNode<?>> nodes){
+		assert null != enternode : "\"node\" is null.";
+		assert null != nodes : "\"nodes\" is null.";
+		if (nodes.contains(enternode) || enternode instanceof PDGMethodEnterNode) {
+			return;
+		}
+		nodes.add(enternode);
+		for (final PDGEdge edge : enternode.getForwardEdges()) {
+			if(edge.type == PDGEdge.TYPE.DATA || edge.type == PDGEdge.TYPE.CONTROL) //add data edge filter
+				this.getForwardNodes(edge.toNode, nodes);
+		}
+		
+	}
 }
