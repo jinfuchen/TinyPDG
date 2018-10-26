@@ -435,7 +435,7 @@ public class PDG implements Comparable<PDG> {
 	public PDGNode<?> getNodeofLine(SortedSet<PDGNode<?>> nodes, int linenumber){
 		assert null != nodes : "\"nodes\" is null.";
 		for (final PDGNode<?> node : nodes) {
-			if(node.core.startLine == linenumber)
+			if(node.core.startLine <= linenumber && node.core.endLine >= linenumber)
 				return node;
 		}
 		return null;

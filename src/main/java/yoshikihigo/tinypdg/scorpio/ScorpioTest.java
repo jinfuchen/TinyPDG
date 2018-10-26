@@ -41,39 +41,42 @@ public class ScorpioTest {
 			System.out.println("generating PDGs ... ");
 	
 			final PDG[] pdgArray;
-			{
-				final List<File> files = getFiles(target);
-				final List<MethodInfo> methods = new ArrayList<MethodInfo>();
-				for (final File file : files) {
-					final CompilationUnit unit = TinyPDGASTVisitor.createAST(file);
-					final TinyPDGASTVisitor visitor = new TinyPDGASTVisitor(file.getAbsolutePath(), unit, methods);
-					unit.accept(visitor);
-				}
-
-				final SortedSet<PDG> pdgs = Collections.synchronizedSortedSet(new TreeSet<PDG>());
-				final CFGNodeFactory cfgNodeFactory = new CFGNodeFactory();
-				final PDGNodeFactory pdgNodeFactory = new PDGNodeFactory();
-				final Thread[] pdgGenerationThreads = new Thread[NUMBER_OF_THREADS];
-				for (int i = 0; i < pdgGenerationThreads.length; i++) {
-					pdgGenerationThreads[i] = new Thread(
-							new PDGGenerationThread(methods, pdgs,cfgNodeFactory, pdgNodeFactory,true, true, false,false,SIZE_THRESHOLD));
-					pdgGenerationThreads[i].start();
-				}
-				for (final Thread thread : pdgGenerationThreads) {
-					try {
-						thread.join();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-				pdgArray = pdgs.toArray(new PDG[0]);
+			
+			final List<File> files = getFiles(target);
+			final List<MethodInfo> methods = new ArrayList<MethodInfo>();
+			for (final File file : files) {
+				final CompilationUnit unit = TinyPDGASTVisitor.createAST(file);
+				final TinyPDGASTVisitor visitor = new TinyPDGASTVisitor(file.getAbsolutePath(), unit, methods);
+				unit.accept(visitor);
 			}
+
+			final SortedSet<PDG> pdgs = Collections.synchronizedSortedSet(new TreeSet<PDG>());
+			final CFGNodeFactory cfgNodeFactory = new CFGNodeFactory();
+			final PDGNodeFactory pdgNodeFactory = new PDGNodeFactory();
+			final Thread[] pdgGenerationThreads = new Thread[NUMBER_OF_THREADS];
+			for (int i = 0; i < pdgGenerationThreads.length; i++) {
+				pdgGenerationThreads[i] = new Thread(
+						new PDGGenerationThread(methods, pdgs,cfgNodeFactory, pdgNodeFactory,true, true, false,false,SIZE_THRESHOLD));
+				pdgGenerationThreads[i].start();
+			}
+			for (final Thread thread : pdgGenerationThreads) {
+				try {
+					thread.join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			pdgArray = pdgs.toArray(new PDG[0]);
+			
 			SortedSet<PDGNode<?>> backwardslicenodes = new TreeSet<PDGNode<?>>();
 			SortedSet<PDGNode<?>> forwardslicenodes = new TreeSet<PDGNode<?>>();
 			PDGNode<?> enternode;
+			System.out.println("number of methods in the class: "+pdgArray.length);
 			for (final PDG pdg : pdgArray) {
 				final SortedSet<PDGNode<?>> nodes = pdg.getAllNodes();
 				enternode = pdg.getNodeofLine(nodes, 9);
+				if(enternode == null)
+					continue;
 				System.out.println(enternode.getText());
 				pdg.getBackwardNodes(enternode, backwardslicenodes);
 				pdg.getForwardNodes(enternode, forwardslicenodes);
@@ -94,6 +97,7 @@ public class ScorpioTest {
 		}
 	}
 
+	
 	private static List<File> getFiles(final File file) {
 
 		final List<File> files = new ArrayList<File>();
